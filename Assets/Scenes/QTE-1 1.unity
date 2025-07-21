@@ -704,7 +704,7 @@ MonoBehaviour:
   optionPanel: {fileID: 601290553}
   question: Pilihlah kanal berita terpercaya!
   countdownTime: 15
-  nextSceneName: QTE-1 1
+  nextSceneName: QTE-1 2
   options:
   - questionText: Kompas TV
     feedbackText: Kanal berikut merupakan yang terpercaya.

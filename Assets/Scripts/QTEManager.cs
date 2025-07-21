@@ -3,8 +3,19 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 
+[System.Serializable]
+public class QTEOption
+{
+    [TextArea]
+    public string questionText;
+    [TextArea]
+    public string feedbackText;
+    public bool isCorrect;
+}
+
 public class QTEManager : MonoBehaviour
 {
+    [Header("UI Elements")]
     public Button readyButton;
     public Button[] optionButtons;
     public TMP_Text questionText;
@@ -12,11 +23,14 @@ public class QTEManager : MonoBehaviour
     public TMP_Text timerText;
     public GameObject optionPanel;
 
-    public string nextSceneName = "NextScene"; // set this in Inspector
+    [Header("Game Settings")]
+    public string question = "Which question is the most appropriate to ask?";
     public float countdownTime = 10f;
+    public string nextSceneName = "NextScene";
 
-    private string question = "Which question is the most appropriate to ask?";
-    private int correctIndex;
+    [Header("QTE Options")]
+    public QTEOption[] options; 
+
     private float timer;
     private bool gameStarted = false;
     private bool answered = false;
@@ -31,13 +45,15 @@ public class QTEManager : MonoBehaviour
 
         for (int i = 0; i < optionButtons.Length; i++)
         {
-            int index = i; // prevent closure issue
+            int index = i;
             optionButtons[i].onClick.AddListener(() => OnOptionSelected(index));
         }
     }
 
     void StartMiniGame()
     {
+        if (options.Length == 0 || optionButtons.Length == 0) return;
+
         gameStarted = true;
         answered = false;
         timer = countdownTime;
@@ -46,8 +62,8 @@ public class QTEManager : MonoBehaviour
         optionPanel.SetActive(true);
         questionText.text = question;
         feedbackText.text = "";
+        timerText.text = Mathf.CeilToInt(timer).ToString();
 
-        correctIndex = Random.Range(0, optionButtons.Length);
         SetButtonTexts();
     }
 
@@ -60,10 +76,11 @@ public class QTEManager : MonoBehaviour
 
         if (timer <= 0f)
         {
-            gameStarted = false;
+            timer = 0f;
             timerText.text = "0";
+            answered = true;
+            gameStarted = false;
             feedbackText.text = "Time's up!";
-            // optionally: disable buttons
         }
     }
 
@@ -74,30 +91,34 @@ public class QTEManager : MonoBehaviour
         answered = true;
         gameStarted = false;
 
-        if (index == correctIndex)
+        if (index < options.Length && options[index].isCorrect)
         {
-            feedbackText.text = "You picked the right question. The witness gives a satisfied answer.";
-            Invoke("LoadNextScene", 2f); // Wait 2 seconds before changing scene
+            feedbackText.text = options[index].feedbackText;
+            Invoke("LoadNextScene", 2f);
+        }
+        else if (index < options.Length)
+        {
+            feedbackText.text = options[index].feedbackText;
         }
         else
         {
-            feedbackText.text = "Wrong.";
+            feedbackText.text = "";
         }
     }
 
     void SetButtonTexts()
     {
-        string[] dummyQuestions = {
-            "Where were you last night?",
-            "Do you like pizza?",
-            "Can I go home?",
-            "Did you see the suspect?"
-        };
-
-        // Shuffle if you like, for now set as is
         for (int i = 0; i < optionButtons.Length; i++)
         {
-            optionButtons[i].GetComponentInChildren<TMP_Text>().text = dummyQuestions[i];
+            if (i < options.Length)
+            {
+                optionButtons[i].gameObject.SetActive(true);
+                optionButtons[i].GetComponentInChildren<TMP_Text>().text = options[i].questionText;
+            }
+            else
+            {
+                optionButtons[i].gameObject.SetActive(false); // Hide unused buttons
+            }
         }
     }
 
